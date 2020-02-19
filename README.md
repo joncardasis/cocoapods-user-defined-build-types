@@ -1,7 +1,7 @@
 # cocoapods-user-defined-build-types
 ![Latest Version](https://img.shields.io/badge/compatible_cocoapods-1.8.4-gray.svg)
 
-Allow Cocoapods to mix-and-match dynamic/static libaries/frameworks.
+Allow Cocoapods to mix dynamic/static libaries/frameworks.
 
 This plugin allows for a Podfile to specify how each Pod (or multiple Pods) should be built (ex. *as a dynamic framework*).
 
