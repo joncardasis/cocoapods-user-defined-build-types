@@ -1,4 +1,3 @@
-require_relative 'podfile_options'
 require_relative 'private_api_hooks'
 
 module Pod 
@@ -20,6 +19,8 @@ end
 
 module CocoapodsUserDefinedBuildTypes
   PLUGIN_NAME = 'cocoapods-user-defined-build-types'
+  LATEST_SUPPORTED_COCOAPODS_VERSION = '1.8.4'
+
   @@verbose_logging = false
 
   def self.verbose_logging
@@ -38,9 +39,7 @@ module CocoapodsUserDefinedBuildTypes
     end
 
     if not Pod::Podfile::DSL.enable_user_defined_build_types
-      Pod::UI.warn "#{CocoapodsUserDefinedBuildTypes::PLUGIN_NAME} is installed but the enable_user_defined_build_types! was not found in the Podfile. No build types were changed."
-      #podfile = installer_context.podfile
-      #podfile.use_frameworks!
+      Pod::UI.warn "#{PLUGIN_NAME} is installed but the enable_user_defined_build_types! was not found in the Podfile. No build types were changed."
     end
   end
 end

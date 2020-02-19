@@ -1,7 +1,5 @@
 require_relative 'podfile_options'
 
-LATEST_SUPPORTED_COCOAPODS_VERSION = '1.8.4'
-
 module Pod    
 
   class Podfile
@@ -111,7 +109,7 @@ module Pod
 
         # Verify patching status
         if (target.send :build_type).to_s != new_build_type.to_s
-          raise Pod::Informative, "WARNING: Method injection failed on `build_type` of target #{target.name}. Most likely you have a version of cocoapods which is greater than the latest supported by this plugin (#{LATEST_SUPPORTED_COCOAPODS_VERSION})"
+          raise Pod::Informative, "WARNING: Method injection failed on `build_type` of target #{target.name}. Most likely you have a version of cocoapods which is greater than the latest supported by this plugin (#{CocoapodsUserDefinedBuildTypes::LATEST_SUPPORTED_COCOAPODS_VERSION})"
         end
       end
       
