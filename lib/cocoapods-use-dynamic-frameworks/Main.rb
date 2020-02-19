@@ -6,62 +6,68 @@ LATEST_SUPPORTED_COCOAPODS_VERSION = '1.8.4'
 # //TODO: move this section to private api
 module Pod    
   class Prebuild
-    def self.keyword
-        :dynamic_framework
+
+    # [Hash{String, BuildType}] mapping of Podfile keyword to a BuildType
+    def self.keyword_mapping
+      {
+        :dynamic_framework => Pod::Target::BuildType.dynamic_framework,
+        :dynamic_library => Pod::Target::BuildType.dynamic_library,
+        :static_framework => Pod::Target::BuildType.static_framework,
+        :static_library => Pod::Target::BuildType.static_library
+      }
     end
   end
 
+  # TODO: Move to private_api_hooks.rb
   class Podfile
     class TargetDefinition
 
-      ## --- option for setting using prebuild framework ---
-      def parse_prebuild_framework(name, requirements)
-          should_prebuild = Pod::Podfile::DSL.prebuild_all
+      # [Hash{String, BuildType}] mapping of pod name to preferred build type if specified.
+      @@root_pod_building_options = Hash.new
 
-          options = requirements.last
-          if options.is_a?(Hash) && options[Pod::Prebuild.keyword] != nil 
-              should_prebuild = options.delete(Pod::Prebuild.keyword)
-              requirements.pop if options.empty?
-          end
-  
-          pod_name = Specification.root_name(name)
-          set_prebuild_for_pod(pod_name, should_prebuild)
-      end
-      
-      def set_prebuild_for_pod(pod_name, should_prebuild)
-          
-          if should_prebuild == true
-              @prebuild_framework_pod_names ||= []
-              @prebuild_framework_pod_names.push pod_name
-          else
-              @should_not_prebuild_framework_pod_names ||= []
-              @should_not_prebuild_framework_pod_names.push pod_name
-          end
+      def self.root_pod_building_options
+        @@root_pod_building_options
       end
 
-      def prebuild_framework_pod_names
-          names = @prebuild_framework_pod_names || []
-          if parent != nil and parent.kind_of? TargetDefinition
-              names += parent.prebuild_framework_pod_names
-          end
-          names
-      end
-      def should_not_prebuild_framework_pod_names
-          names = @should_not_prebuild_framework_pod_names || []
-          if parent != nil and parent.kind_of? TargetDefinition
-              names += parent.should_not_prebuild_framework_pod_names
-          end
-          names
-      end
+      # ======================
+      # ==== PATCH METHOD ====
+      # ======================
+      swizzled_parse_subspecs = instance_method(:parse_subspecs)
 
-      # ---- patch method ----
-      # We want modify `store_pod` method, but it's hard to insert a line in the 
-      # implementation. So we patch a method called in `store_pod`.
-      swizzled_parse_inhibit_warnings = instance_method(:parse_inhibit_warnings)
+      define_method(:parse_subspecs) do |name, requirements|
+        # Update hash map of pod target names and association with their preferred linking & packing
+        building_options = @@root_pod_building_options
+        pod_name = Specification.root_name(name)
+        options = requirements.last
+        
+        Pod::UI.puts "🔥 AWWW YISS MOTHER FUCKING BREADCRUMS. #{pod_name}".green
+        # build_type = build_type_for_options(options)
+        # Pod::UI.puts "#{pod_name}==== #{build_type}".green
 
-      define_method(:parse_inhibit_warnings) do |name, requirements|
-        parse_prebuild_framework(name, requirements)
-        old_method.bind(self).(name, requirements)
+        # if options.is_a?(Hash) && build_type != nil
+        #     #should_build_dymanic_framework = options.delete(Pod::Prebuild.keyword) # TODO: use this
+        #     building_options[pod_name] = Pod::Target::BuildType.dynamic_framework # TODO: parse options
+        #     Pod::UI.puts "cocoapods-use-dynamic-frameworks | #{pod_name} ==> #{Pod::Target::BuildType.dynamic_framework}".green
+        #     requirements.pop if options.empty?
+        # end
+
+        # NEW
+        if options.is_a?(Hash)
+          options.each do |k,v|
+            if Pod::Prebuild.keyword_mapping.key?(k) && options.delete(k)
+              build_type = Pod::Prebuild.keyword_mapping[k]
+              puts "#{pod_name} DEFINES CUSTOM VALUE: #{build_type}"
+             
+              building_options[pod_name] = build_type
+              Pod::UI.puts "cocoapods-use-dynamic-frameworks | #{pod_name} ==> #{Pod::Target::BuildType.dynamic_framework}".green
+            end
+          end
+          requirements.pop if options.empty?
+        end
+
+        
+        # Call old method
+        swizzled_parse_subspecs.bind(self).(name, requirements)
       end
       
     end
@@ -70,50 +76,41 @@ end
 
 # TODO: Move to private_api_hooks.rb
 module Pod
+  class Target
+    # @return [BuildTarget]
+    attr_accessor :user_defined_build_type
+  end
+
   class Installer
 
-    # Hooked attribute to obatain mutable Array<AggregateTarget> data. (As of cocoapods 1.8.4)
-    #attr_reader :aggregate_targets
+    # Walk through pod dependencies and assign build_type from root through all transitive dependencies
+    def resolve_all_pod_build_types(pod_targets)
+      root_pod_building_options = Pod::Podfile::TargetDefinition.root_pod_building_options.clone
 
-    # Store method reference
-    # swizzled_integrate_user_project = instance_method(:integrate_user_project)
+      pod_targets.each do |target|
+        next if not root_pod_building_options.key?(target.name)
 
-    # # Swizzle 'integrate_user_project' cocoapods core function
-    # define_method(:integrate_user_project) do
-    #   Pod::UI.puts "🔥 cocoapods-use-dynamic-frameworks patching linking/packing options".green
-    #   fragile_targets_variable = self.send :aggregate_targets # 'aggregate_targets' is the current variable name (Pod::Installer:aggregate_targets)
+        build_type = root_pod_building_options[target.name]
+        dependencies = target.dependent_targets
 
-    #   fragile_targets_variable.each do |aggregate_target|
-    #     aggregate_target.pod_targets.each do |target|
+        # Cascade build_type down
+        while not dependencies.empty?
+          new_dependencies = []
+          dependencies.each do |dep_target|
+            dep_target.user_defined_build_type = build_type
+            new_dependencies.push(*dep_target.dependent_targets)
+          end
+          dependencies = new_dependencies
+        end
 
-    #       current_build_type = target.send :build_type
-    #       #puts "#{current_build_type.class}  ==> #{current_build_type}"
-    #       puts "#{target.name} ==> #{current_build_type}"
-          
+        target.user_defined_build_type = build_type
+      end
+    end
 
-    #       # Override the target's build time for user provided one
-    #       target.instance_variable_set(:@build_type, Pod::Target::BuildType.dynamic_framework)
-          
-    #       # def target.build_type;
-    #       #   puts '🌊 awwww yisss'
-    #       #   Pod::Target::BuildType.static_library
-    #       # end
 
-    #       # def target.build_type;
-    #       #   Pod::Target::BuildType.static_library
-    #       # end
-    #     end
-    #   end
-
-    #   #self.instance_variable_set(:@aggregate_targets, fragile_targets_variable)
-
-    #   trueVar = self.instance_variable_get(:@aggregate_targets)
-    #   puts trueVar[0].pod_targets[0].send :build_type # expect static_library
-
-    #   # Run original method
-    #   swizzled_integrate_user_project.bind(self).()
-    # end
-
+    # ======================
+    # ==== PATCH METHOD ====
+    # ======================
 
     # Store old method reference
     swizzled_analyze = instance_method(:analyze)
@@ -123,45 +120,34 @@ module Pod
       Pod::UI.puts "🔥 cocoapods-use-dynamic-frameworks patching linking/packing options".green
 
       # Run original method
-      swizzled_analyze.bind(self).()
+      swizzled_analyze.bind(self).(analyzer)
+
+      # Set user assigned build types on Target objects
+      resolve_all_pod_build_types(pod_targets)
+
 
       # Update each of @pod_targets private @build_type variable.
       # Note: @aggregate_targets holds a reference to @pod_targets under it's pod_targets variable.
       pod_targets.each do |target|
+        next if target.user_defined_build_type == nil
+        
+        new_build_type = target.user_defined_build_type
         current_build_type = target.send :build_type
-        new_build_type = Pod::Target::BuildType.dynamic_framework # TODO: Map stuff
-
-        #puts "CUSTOM PARAM: #{target.dynamic_framework}"
 
         puts "#{target.name}: #{current_build_type} ==> #{new_build_type}"
         
         # Override the target's build time for user provided one
         target.instance_variable_set(:@build_type, new_build_type)
 
-        # VERIFY INJECTION SUCCESS. TODO: Cleanup 
+        # Verify patching status
         if (target.send :build_type).to_s != new_build_type.to_s
-          raise Pod::Informative, "Method injection failed on `build_type` of target #{target.name}. Most likely you have a version of cocoapods which is greater than the latest supported (#{LATEST_SUPPORTED_COCOAPODS_VERSION})"
+          raise Pod::Informative, "WARNING: Method injection failed on `build_type` of target #{target.name}. Most likely you have a version of cocoapods which is greater than the latest supported by this plugin (#{LATEST_SUPPORTED_COCOAPODS_VERSION})"
         end
       end
-
-      puts pod_targets[0].methods.sort
+      
+      Pod::UI.puts "🔥 cocoapods-use-dynamic-frameworks finished patching".green
     end
-
-    # class Analyzer
-    #   def determine_build_type(spec, target_definition_build_type)
-    #     puts "🎃 ATTEMPED HIJACK 2"
-    #     Pod::Target::BuildType.static_library
-    #   end
-    # end
   end
-
-  # class Podfile
-  #   class TargetDefinition
-  #     def use_frameworks!(option = true)
-  #       puts "🎃 ATTEMPED HIJACK on BUILDTYPE"
-  #     end
-  #   end
-  # end 
 end
 
 
@@ -172,11 +158,6 @@ module Pod
     module DSL
 
       @@use_dynamic_frameworks = false
-      @@root_dynamic_framework_names = 'valuesss'
-
-      def self.root_dynamic_framework_names
-        @@root_dynamic_framework_names
-      end
 
       def self.use_dynamic_frameworks
         @@use_dynamic_frameworks
