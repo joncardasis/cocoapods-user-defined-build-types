@@ -1,1 +1,1 @@
-require 'cocoapods-use-dynamic-frameworks/Main'
+require 'cocoapods-user-defined-build-types/main'

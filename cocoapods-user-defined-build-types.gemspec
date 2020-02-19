@@ -1,19 +1,19 @@
 # coding: utf-8
 lib = File.expand_path('../lib', __FILE__)
 $LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
-require 'cocoapods-use-dynamic-frameworks/gem_version.rb'
+require 'cocoapods-user-defined-build-types/gem_version.rb'
 
 Gem::Specification.new do |spec|
-  spec.name          = 'cocoapods-use-dynamic-frameworks'
+  spec.name          = 'cocoapods-user-defined-build-types'
   spec.version       = CocoapodsUseDynamicFrameworks::VERSION
   spec.authors       = ['Jonathan Cardasis']
   spec.email         = ['joncardasis@gmail.com']
   spec.description   = %q{A Cocoapods plugin which selectively enables use_frameworks! per pod.}
   spec.summary       = %q{Cocoapods plugin which selectively enables use_frameworks! per pod. All Cocoapods are bundled into a single dynamic framework, and by default all pods are statically compiled as libraries. Specify specific pods to be compiled as dynamic frameworks.}
-  spec.homepage      = 'https://github.com/joncardasis/cocoapods-use-dynamic-frameworks'
+  spec.homepage      = 'https://github.com/joncardasis/cocoapods-user-defined-build-types'
   spec.license       = 'MIT'
 
-  spec.files         = `git ls-files`.split($/)
+  spec.files         = Dir['lib/**/*']
   spec.executables   = spec.files.grep(%r{^bin/}) { |f| File.basename(f) }
   spec.test_files    = spec.files.grep(%r{^(test|spec|features)/})
   spec.require_paths = ['lib']

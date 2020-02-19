@@ -1,6 +1,6 @@
 source 'https://rubygems.org'
 
-# Specify your gem's dependencies in cocoapods-use-dynamic-frameworks.gemspec
+# Specify your gem's dependencies in cocoapods-user-defined-build-types.gemspec
 gemspec
 
 group :development do
