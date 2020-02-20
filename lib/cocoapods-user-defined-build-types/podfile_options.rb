@@ -1,5 +1,9 @@
 module Pod    
-  class Prebuild
+  class UserOption
+
+    def self.keyword
+      :build_type
+    end
 
     # [Hash{String, BuildType}] mapping of Podfile keyword to a BuildType
     def self.keyword_mapping

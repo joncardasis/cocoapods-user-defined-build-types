@@ -21,12 +21,12 @@ enable_user_defined_build_types!
 
 target "CoffeeApp" do
     pod 'Alamofire'
-    pod "SwiftyJSON", :dynamic_framework => true
+    pod "SwiftyJSON", :build_type => :dynamic_framework
 end
 ```
 - Add `plugin 'cocoapods-user-defined-build-types'` to the top of your Podfile
 - Add the `enable_user_defined_build_types!` directive to the top of your Podfile
-- Add a build type option to one or more Pods to direct how they're built (ex. `:dynamic_framework => true`)
+- Add a `build_type` option to one or more Pods to direct how they're built (ex. `:build_type => :dynamic_framework`)
 - `pod install`
 
 
@@ -57,7 +57,7 @@ plugin 'cocoapods-user-defined-build-types', {
 For even more detailed logging, the development flag can be set in your terminal env: `export CP_DEV=1`.
 
 ## How
-**1.8.4** By overriding `Pod::Podfile::TargetDefinition`'s `build_type` function (from cocoapods-core) to return the specifed linking (static/dynamic) and packing (library/framework), we can change how Cococpods builts specific dependencies. Currently in core, there is support for multiple build type but the use_frameworks! directive is the only way to enable framework builds, and it is an all-or-nothing approach.
+**CP 1.8.4** | By overriding `Pod::Podfile::TargetDefinition`'s `build_type` function (from cocoapods-core) to return the specifed linking (static/dynamic) and packing (library/framework), we can change how Cococpods builts specific dependencies. Currently in core, there is support for multiple build type but the use_frameworks! directive is the only way to enable framework builds, and it is an all-or-nothing approach.
 
 ## License
 Available under the MIT license. See the LICENSE file for more info.

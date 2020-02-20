@@ -5,7 +5,7 @@ require 'cocoapods-user-defined-build-types/gem_version.rb'
 
 Gem::Specification.new do |spec|
   spec.name          = 'cocoapods-user-defined-build-types'
-  spec.version       = CocoapodsUseDynamicFrameworks::VERSION
+  spec.version       = CocoapodsUserDefinedBuildTypes::VERSION
   spec.authors       = ['Jonathan Cardasis']
   spec.email         = ['joncardasis@gmail.com']
   spec.description   = %q{A Cocoapods plugin which selectively enables use_frameworks! per pod.}

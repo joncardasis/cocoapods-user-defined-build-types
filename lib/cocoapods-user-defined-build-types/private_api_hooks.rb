@@ -27,10 +27,15 @@ module Pod
 
         if options.is_a?(Hash)
           options.each do |k,v|
-            if Pod::Prebuild.keyword_mapping.key?(k) && options.delete(k)
-              build_type = Pod::Prebuild.keyword_mapping[k]
+            next if not options.key?(Pod::UserOption.keyword)
+             
+            user_build_type = options.delete(k)
+            if Pod::UserOption.keyword_mapping.key?(user_build_type)
+              build_type = Pod::UserOption.keyword_mapping[user_build_type]
               building_options[pod_name] = build_type
               CocoapodsUserDefinedBuildTypes.verbose_log("#{pod_name} build type set to: #{build_type}")
+            else
+              raise Pod::Informative, "#{CocoapodsUserDefinedBuildTypes::PLUGIN_NAME} could not parse a #{Pod::UserOption.keyword} of '#{user_build_type}' on #{pod_name}"
             end
           end
           requirements.pop if options.empty?
@@ -52,29 +57,29 @@ module Pod
 
   class Installer
 
-      # Walk through pod dependencies and assign build_type from root through all transitive dependencies
-      def resolve_all_pod_build_types(pod_targets)
-        root_pod_building_options = Pod::Podfile::TargetDefinition.root_pod_building_options.clone
+    # Walk through pod dependencies and assign build_type from root through all transitive dependencies
+    def resolve_all_pod_build_types(pod_targets)
+      root_pod_building_options = Pod::Podfile::TargetDefinition.root_pod_building_options.clone
 
-        pod_targets.each do |target|
-          next if not root_pod_building_options.key?(target.name)
+      pod_targets.each do |target|
+        next if not root_pod_building_options.key?(target.name)
 
-          build_type = root_pod_building_options[target.name]
-          dependencies = target.dependent_targets
+        build_type = root_pod_building_options[target.name]
+        dependencies = target.dependent_targets
 
-          # Cascade build_type down
-          while not dependencies.empty?
-            new_dependencies = []
-            dependencies.each do |dep_target|
-              dep_target.user_defined_build_type = build_type
-              new_dependencies.push(*dep_target.dependent_targets)
-            end
-            dependencies = new_dependencies
+        # Cascade build_type down
+        while not dependencies.empty?
+          new_dependencies = []
+          dependencies.each do |dep_target|
+            dep_target.user_defined_build_type = build_type
+            new_dependencies.push(*dep_target.dependent_targets)
           end
-
-          target.user_defined_build_type = build_type
+          dependencies = new_dependencies
         end
+
+        target.user_defined_build_type = build_type
       end
+    end
 
     # ======================
     # ==== PATCH METHOD ====
@@ -114,7 +119,7 @@ module Pod
       end
       
       CocoapodsUserDefinedBuildTypes.verbose_log("finished patching user defined build types")
-      Pod::UI.puts "cocoapods-use-dynamic-frameworks updated build options"
+      Pod::UI.puts "#{CocoapodsUserDefinedBuildTypes::PLUGIN_NAME} updated build options"
     end
   end
 end

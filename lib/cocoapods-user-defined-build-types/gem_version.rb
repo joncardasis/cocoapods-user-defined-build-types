@@ -1,3 +1,3 @@
-module CocoapodsUseDynamicFrameworks
-  VERSION = "0.0.1"
+module CocoapodsUserDefinedBuildTypes
+  VERSION = "0.0.2"
 end
