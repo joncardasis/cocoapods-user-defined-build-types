@@ -8,8 +8,8 @@ Gem::Specification.new do |spec|
   spec.version       = CocoapodsUserDefinedBuildTypes::VERSION
   spec.authors       = ['Jonathan Cardasis']
   spec.email         = ['joncardasis@gmail.com']
-  spec.description   = %q{A Cocoapods plugin which selectively enables use_frameworks! per pod.}
-  spec.summary       = %q{Cocoapods plugin which selectively enables use_frameworks! per pod. All Cocoapods are bundled into a single dynamic framework, and by default all pods are statically compiled as libraries. Specify specific pods to be compiled as dynamic frameworks.}
+  spec.description   = %q{A Cocoapods plugin which selectively modifies a Pod build_type right before integration. This allows for mixing dynamic frameworks with the default static library build type used by Cocoapods.}
+  spec.summary       = %q{A Cocoapods plugin which can selectively set build type per pod (static library, dynamic framework, etc.)}
   spec.homepage      = 'https://github.com/joncardasis/cocoapods-user-defined-build-types'
   spec.license       = 'MIT'
 
