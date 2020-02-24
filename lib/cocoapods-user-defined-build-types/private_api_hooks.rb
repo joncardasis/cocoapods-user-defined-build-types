@@ -90,6 +90,10 @@ module Pod
 
     # Swizzle 'analyze' cocoapods core function to finalize build settings
     define_method(:analyze) do |analyzer = create_analyzer|
+      if !CocoapodsUserDefinedBuildTypes.plugin_enabled
+        return swizzled_analyze.bind(self).(analyzer)
+      end
+
       CocoapodsUserDefinedBuildTypes.verbose_log("patching build types...")
 
       # Run original method
