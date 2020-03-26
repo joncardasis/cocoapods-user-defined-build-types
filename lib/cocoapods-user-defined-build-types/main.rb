@@ -19,7 +19,7 @@ end
 
 module CocoapodsUserDefinedBuildTypes
   PLUGIN_NAME = 'cocoapods-user-defined-build-types'
-  LATEST_SUPPORTED_COCOAPODS_VERSION = '1.8.4'
+  LATEST_SUPPORTED_COCOAPODS_VERSION = '1.9.1'
   
   @@plugin_enabled = false
   @@verbose_logging = false

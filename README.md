@@ -1,11 +1,9 @@
 # cocoapods-user-defined-build-types
-![Latest Version](https://img.shields.io/badge/compatible_cocoapods-1.8.4-gray.svg)
+![Latest Version](https://img.shields.io/badge/Latest_supported_CocoaPods-1.9.1-gray.svg)
 
 Allow CocoaPods to mix dynamic/static libaries/frameworks.
 
 This plugin allows for a Podfile to specify how each Pod (or multiple Pods) should be built (ex. *as a dynamic framework*).
-
-_Note: While this plugin does target CocoaPods 1.8.4, older versions also work with this plugin._
 
 
 ## Installation
@@ -57,7 +55,7 @@ plugin 'cocoapods-user-defined-build-types', {
 For even more detailed logging, the development flag can be set in your terminal env: `export CP_DEV=1`.
 
 ## How
-**CP 1.8.4** | By overriding `Pod::Podfile::TargetDefinition`'s `build_type` function (from cocoapods-core) to return the specifed linking (static/dynamic) and packing (library/framework), we can change how Cococpods builts specific dependencies. Currently in core, there is support for multiple build type but the use_frameworks! directive is the only way to enable framework builds, and it is an all-or-nothing approach.
+By overriding `Pod::Podfile::TargetDefinition`'s `build_type` function (from cocoapods-core) to return the specifed linking (static/dynamic) and packing (library/framework), we can change how Cococpods builts specific dependencies. Currently in core, there is support for multiple build type but the use_frameworks! directive is the only way to enable framework builds, and it is an all-or-nothing approach.
 
 ## License
 Available under the MIT license. See the LICENSE file for more info.
