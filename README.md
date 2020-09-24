@@ -22,7 +22,7 @@ target "CoffeeApp" do
     pod "SwiftyJSON", :build_type => :dynamic_framework
 ```
 - Add `plugin 'cocoapods-user-defined-build-types'` to the top of your Podfile
-- Add the `enable_user_defined_build_types!` directive to the top of your Podfile
+- Add the `enable_user_defined_build_types!` directive to the top of your Podfile (removing `use_frameworks!` if present)
 - Add a `build_type` option to one or more Pods to direct how they're built (ex. `:build_type => :dynamic_framework`)
 - `pod install`
 
